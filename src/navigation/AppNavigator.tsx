@@ -18,6 +18,12 @@ import SettingsScreen from '../screens/profile/SettingsScreen';
 import PrivacyScreen from '../screens/profile/PrivacyScreen';
 import SupportScreen from '../screens/profile/SupportScreen';
 import NetworkErrorScreen from '../screens/main/NetworkErrorScreen';
+import DiscoveryAreaScreen from '../screens/main/DiscoveryAreaScreen';
+import UserActivityInsightsScreen from '../screens/main/UserActivityInsightsScreen';
+import MyInterestScreen from '../screens/main/MyInterestScreen';
+import SwipeDiscoveryModeScreen from '../screens/main/SwipeDiscoveryModeScreen';
+import EmptyFeedScreen from '../screens/main/EmptyFeedScreen';
+import NearbyActivityFeedScreen from '../screens/main/NearbyActivityFeedScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -42,6 +48,12 @@ export const AppNavigator = () => {
         <Stack.Screen name="Privacy" component={PrivacyScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="NetworkError" component={NetworkErrorScreen} />
+        <Stack.Screen name="DiscoveryArea" component={DiscoveryAreaScreen} />
+        <Stack.Screen name="UserActivityInsights" component={UserActivityInsightsScreen} />
+        <Stack.Screen name="MyInterest" component={MyInterestScreen} />
+        <Stack.Screen name="SwipeDiscoveryMode" component={SwipeDiscoveryModeScreen} />
+        <Stack.Screen name="EmptyFeed" component={EmptyFeedScreen} />
+        <Stack.Screen name="NearbyActivityFeed" component={NearbyActivityFeedScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

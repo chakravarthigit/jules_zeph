@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Animated, {
   useAnimatedStyle,
   withDelay,
   withTiming,
-  useSharedValue,
-  useEffect
+  useSharedValue
 } from 'react-native-reanimated';
 
 interface StaggerProps {
