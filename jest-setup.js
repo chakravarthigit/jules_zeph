@@ -16,3 +16,21 @@ jest.mock('@react-navigation/native', () => {
     }),
   };
 });
+
+jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon');
+jest.mock('react-native-linear-gradient', () => 'LinearGradient');
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const Svg = (props) => React.createElement('Svg', props);
+  const Circle = (props) => React.createElement('Circle', props);
+  const Path = (props) => React.createElement('Path', props);
+  return {
+    __esModule: true,
+    default: Svg,
+    Circle,
+    Path,
+    Defs: (props) => React.createElement('Defs', props),
+    Stop: (props) => React.createElement('Stop', props),
+    LinearGradient: (props) => React.createElement('LinearGradient', props),
+  };
+});

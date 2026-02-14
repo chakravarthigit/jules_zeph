@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
 import { colors, typography } from '../../theme';
 import { ClayView } from '../../components/ClayView';
 import { GradientButton } from '../../components/GradientButton';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '../../navigation/types';
 import { useStore } from '../../store/useStore';
-import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSpring,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -19,83 +28,128 @@ const RadiusSelectorScreen: React.FC<Props> = ({ navigation }) => {
   const [radius, setRadius] = useState(2);
   const setDiscoveryRadius = useStore(state => state.setDiscoveryRadius);
 
+  const pulseAnim = useSharedValue(1);
+
+  useEffect(() => {
+    pulseAnim.value = withRepeat(withTiming(1.2, { duration: 1500 }), -1, true);
+  }, [pulseAnim]);
+
+  const animatedPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
+    opacity: interpolate(pulseAnim.value, [1, 1.2], [0.5, 0], Extrapolate.CLAMP),
+  }));
+
   const handleContinue = () => {
     setDiscoveryRadius(radius);
     navigation.navigate('IdentityVerification');
   };
 
-  // Simple dial logic: for now we'll use buttons to simulate, but UI will look like the design
   return (
     <View style={styles.container}>
+      <View style={styles.statusBarSpacer} />
+
       <View style={styles.header}>
-        <Text style={styles.title}>How far do you {'\n'}want to explore?</Text>
-        <Text style={styles.subtitle}>We'll show you what's happening within this circle.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="chevron-left" size={32} color={colors.text.slate} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Discovery Area</Text>
+        <Text style={styles.subtitle}>Set your local exploration range</Text>
       </View>
 
-      <View style={styles.dialContainer}>
-        <View style={styles.labelWrapper}>
-          <Text style={styles.zoneLabel}>Discovery Zone</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.mapPreviewContainer}>
+          <ClayView style={styles.mapPreview}>
+            <View style={styles.mapPlaceholder}>
+              <Svg height="100%" width="100%" style={styles.svgOverlay}>
+                <Path d="M0 40 Q 50 20 100 40 T 200 40 T 300 40 T 400 60" fill="none" stroke="#cbd5e1" strokeWidth="2" />
+                <Path d="M200 0 L 220 150" fill="none" stroke="#cbd5e1" strokeWidth="2" />
+                <Path d="M50 150 L 100 0" fill="none" stroke="#cbd5e1" strokeWidth="2" />
+              </Svg>
+              <Animated.View style={[styles.pulseCircle, animatedPulseStyle]} />
+              <View style={styles.centerDot} />
+              <View style={styles.locationBadge}>
+                <Text style={styles.locationText}>New York, NY</Text>
+              </View>
+            </View>
+          </ClayView>
         </View>
 
-        <View style={styles.outerDial}>
-          <ClayView style={styles.innerGroove} inset>
-             <View style={styles.centerCard}>
-                <Text style={styles.radiusValue}>{radius} <Text style={styles.unit}>km</Text></Text>
-                <Text style={styles.radiusStatus}>SELECTED</Text>
-             </View>
+        <View style={styles.dialWrapper}>
+          <ClayView style={styles.dialContainer}>
+            <Svg style={styles.svgArc} width="240" height="240" viewBox="0 0 200 200">
+              <Circle
+                cx="100"
+                cy="100"
+                r="90"
+                stroke="#e2e8f0"
+                strokeWidth="12"
+                fill="none"
+                strokeDasharray="565"
+                strokeLinecap="round"
+                transform="rotate(-90 100 100)"
+              />
+              <Circle
+                cx="100"
+                cy="100"
+                r="90"
+                stroke={colors.primary}
+                strokeWidth="12"
+                fill="none"
+                strokeDasharray="565"
+                strokeDashoffset={565 - (radius / 5) * 565}
+                strokeLinecap="round"
+                transform="rotate(-90 100 100)"
+              />
+            </Svg>
+            <View style={styles.dialTextContent}>
+              <Text style={styles.radiusValue}>{radius}<Text style={styles.unit}>km</Text></Text>
+              <Text style={styles.radiusLabel}>RADIUS</Text>
+            </View>
+
+            {/* Knob simulation */}
+            <View style={[styles.knob, { transform: [{ rotate: `${(radius / 5) * 360 - 90}deg` }, { translateX: 90 }] }]}>
+               <View style={styles.knobCircle} />
+            </View>
+
+            <View style={styles.compassLabels}>
+              <Text style={[styles.compassText, { top: 10 }]}>N</Text>
+              <Text style={[styles.compassText, { bottom: 10 }]}>S</Text>
+              <Text style={[styles.compassText, { left: 10 }]}>W</Text>
+              <Text style={[styles.compassText, { right: 10 }]}>E</Text>
+            </View>
           </ClayView>
 
-          <Svg style={styles.svgArc} width="100%" height="100%" viewBox="0 0 100 100">
-            <Circle
-              cx="50"
-              cy="50"
-              r="40"
-              stroke="#eee"
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray="251"
-              strokeDashoffset="60"
-              strokeLinecap="round"
-              transform="rotate(135 50 50)"
-            />
-            <Circle
-              cx="50"
-              cy="50"
-              r="40"
-              stroke={colors.primary}
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray="251"
-              strokeDashoffset={251 - (radius / 5) * 190}
-              strokeLinecap="round"
-              transform="rotate(135 50 50)"
-            />
-          </Svg>
+          <View style={styles.dialFooter}>
+             <Text style={styles.dialMark}>1km</Text>
+             <Text style={[styles.dialMark, { color: colors.primary, fontSize: 14 }]}>{radius}km</Text>
+             <Text style={styles.dialMark}>5km</Text>
+          </View>
         </View>
 
-        <View style={styles.controls}>
-           <TouchableOpacity onPress={() => setRadius(Math.max(1, radius - 1))} style={styles.controlBtn}>
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>Your Neighborhood</Text>
+          <Text style={styles.infoText}>
+            You'll discover community events, local jams, and meetups within a <Text style={styles.boldText}>20 minute walk</Text> from your current location.
+          </Text>
+        </View>
+
+        {/* Simple slider for radius control since we don't have a custom gesture knob yet */}
+        <View style={styles.sliderControls}>
+           <TouchableOpacity onPress={() => setRadius(Math.max(1, radius - 0.5))} style={styles.controlBtn}>
              <Icon name="remove" size={24} color={colors.primary} />
            </TouchableOpacity>
-           <TouchableOpacity onPress={() => setRadius(Math.min(5, radius + 1))} style={styles.controlBtn}>
+           <TouchableOpacity onPress={() => setRadius(Math.min(5, radius + 0.5))} style={styles.controlBtn}>
              <Icon name="add" size={24} color={colors.primary} />
            </TouchableOpacity>
         </View>
 
-        <View style={styles.description}>
-          <Text style={styles.descTitle}>A quick bike ride</Text>
-          <Text style={styles.descText}>Perfect for discovering nearby cafes and spots within a short cycling distance.</Text>
-        </View>
-      </View>
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
       <View style={styles.footer}>
-        <GradientButton
-          title="Start Exploring"
-          onPress={handleContinue}
-          style={styles.button}
-        />
-        <TouchableOpacity onPress={() => handleContinue()}>
-          <Text style={styles.skipLink}>I'll set this later</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={handleContinue}>
+          <Icon name="check-circle" size={24} color="white" />
+          <Text style={styles.saveButtonText}>Save Discovery Area</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -106,143 +160,225 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.light,
-    paddingHorizontal: 20,
-    paddingTop: 80,
+  },
+  statusBarSpacer: {
+    height: 50,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 30,
+    paddingBottom: 20,
+  },
+  backButton: {
+    marginLeft: -10,
+    marginBottom: 10,
   },
   title: {
     fontSize: 32,
-    fontWeight: typography.fontWeight.black,
+    fontWeight: '800',
     color: colors.text.primary,
-    textAlign: 'center',
-    lineHeight: 38,
-    marginBottom: 12,
+    lineHeight: 36,
   },
   subtitle: {
-    fontSize: typography.fontSize.md,
+    fontSize: 14,
     color: colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 20,
+    marginTop: 4,
+  },
+  scrollContent: {
+    paddingHorizontal: 25,
+    alignItems: 'center',
+  },
+  mapPreviewContainer: {
+    width: '100%',
+    height: 130,
+    marginVertical: 20,
+  },
+  mapPreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  mapPlaceholder: {
+    flex: 1,
+    backgroundColor: '#e2e8f0',
+    opacity: 0.6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  svgOverlay: {
+    position: 'absolute',
+  },
+  pulseCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    position: 'absolute',
+  },
+  centerDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  locationBadge: {
+    position: 'absolute',
+    bottom: 12,
+    right: 16,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  locationText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  dialWrapper: {
+    alignItems: 'center',
+    marginVertical: 20,
   },
   dialContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  labelWrapper: {
-    backgroundColor: colors.background.light,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(209, 217, 230, 0.5)',
-    marginBottom: 30,
-  },
-  zoneLabel: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  outerDial: {
-    width: width * 0.7,
-    height: width * 0.7,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-  },
-  innerGroove: {
-    width: '90%',
-    height: '90%',
-    borderRadius: width * 0.35,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerCard: {
-    width: '70%',
-    height: '70%',
-    borderRadius: width * 0.25,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  radiusValue: {
-    fontSize: 48,
-    fontWeight: typography.fontWeight.black,
-    color: colors.text.primary,
-  },
-  unit: {
-    fontSize: 18,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  radiusStatus: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
-    letterSpacing: 2,
-    marginTop: 4,
+    backgroundColor: colors.clay.white,
   },
   svgArc: {
     position: 'absolute',
-    zIndex: 1,
   },
-  controls: {
-    flexDirection: 'row',
-    gap: 40,
-    marginTop: 20,
-  },
-  controlBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'white',
+  dialTextContent: {
     alignItems: 'center',
+  },
+  radiusValue: {
+    fontSize: 48,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  unit: {
+    fontSize: 24,
+  },
+  radiusLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94a3b8',
+    letterSpacing: 2,
+    marginTop: -4,
+  },
+  knob: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  description: {
-    marginTop: 40,
     alignItems: 'center',
-    paddingHorizontal: 40,
   },
-  descTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text.primary,
+  knobCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  compassLabels: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  compassText: {
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#cbd5e1',
+  },
+  dialFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 200,
+    marginTop: 15,
+  },
+  dialMark: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
+  infoSection: {
+    alignItems: 'center',
+    marginTop: 30,
+    paddingHorizontal: 20,
+  },
+  infoTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
     marginBottom: 8,
   },
-  descText: {
-    fontSize: typography.fontSize.sm,
+  infoText: {
+    fontSize: 14,
     color: colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+  },
+  boldText: {
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  sliderControls: {
+    flexDirection: 'row',
+    gap: 30,
+    marginTop: 30,
+  },
+  controlBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   footer: {
-    paddingBottom: 40,
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 30,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    height: 64,
+    borderRadius: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  button: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  skipLink: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
+  saveButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });
 

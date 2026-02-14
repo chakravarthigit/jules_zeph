@@ -1,100 +1,157 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity } from 'react-native';
-import { colors, typography } from '../../theme';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { colors } from '../../theme';
 import { ClayView } from '../../components/ClayView';
-import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { IconPill } from '../../components/IconPill';
-import { NotificationItem } from '../../components/NotificationItem';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
-const CATEGORIES = [
-  { id: 'all', label: 'All', emoji: '🎈' },
-  { id: 'food', label: 'Food', emoji: '🍕' },
-  { id: 'active', label: 'Active', emoji: '🏃' },
-  { id: 'social', label: 'Social', emoji: '🥂' },
-];
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 
 const ActivityScreen = () => {
+  const [activeTab, setActiveTab] = useState('Nearby');
+
   return (
     <View style={styles.container}>
+      <View style={styles.statusBarSpacer} />
+
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>What's Near You</Text>
-          <View style={styles.locationRow}>
-             <Icon name="location-on" size={14} color={colors.primary} />
-             <Text style={styles.locationText}>SoHo, New York</Text>
-          </View>
-        </View>
-        <ProfileAvatar size={48} />
+        <Text style={styles.title}>Activity</Text>
+        <TouchableOpacity style={styles.settingsBtn}>
+          <ClayView style={styles.settingsBtnInner}>
+            <Icon name="settings" size={24} color={colors.text.secondary} />
+          </ClayView>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.toggleRow}>
-        <ClayView style={styles.togglePill} inset>
-          <TouchableOpacity style={styles.toggleItem}><Text style={styles.toggleText}>Map</Text></TouchableOpacity>
-          <TouchableOpacity style={[styles.toggleItem, styles.activeToggle]}><Text style={styles.activeToggleText}>Cards</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.toggleItem}><Text style={styles.toggleText}>List</Text></TouchableOpacity>
-        </ClayView>
-      </View>
-
-      <View style={styles.categoriesContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
-          {CATEGORIES.map(cat => (
-            <IconPill key={cat.id} label={cat.label} icon={cat.emoji} active={cat.id === 'all'} />
+      <View style={styles.tabBarWrapper}>
+        <ClayView style={styles.tabBarPill}>
+          {['Nearby', 'My Events', 'Mentions'].map(tab => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              style={[styles.tab, activeTab === tab && styles.activeTab]}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
+            </TouchableOpacity>
           ))}
-        </ScrollView>
+        </ClayView>
       </View>
 
-      <ScrollView contentContainerStyle={styles.feed} showsVerticalScrollIndicator={false}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Happening Right Now</Text>
-          <Text style={styles.seeAll}>See All</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.dateHeader}>
+          <Text style={styles.dateLabel}>NEW • TODAY</Text>
+          <View style={styles.dividerLine} />
         </View>
 
-        <ClayView style={styles.urgentCard}>
-           <View style={styles.cardContent}>
-              <View style={styles.emojiContainer}>
-                 <Text style={styles.largeEmoji}>🏐</Text>
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <ClayView style={styles.notificationCard}>
+            <View style={styles.cardIndicator} />
+            <View style={styles.newDot} />
+            <View style={[styles.iconContainer, { backgroundColor: 'rgba(74, 124, 255, 0.1)' }]}>
+              <Icon name="location-on" size={28} color={colors.primary} />
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardTitle}>New pop-up market detected</Text>
+                <Text style={styles.cardTime}>2m</Text>
               </View>
-              <View style={styles.eventInfo}>
-                 <Text style={styles.eventTitle}>Beach Volleyball 4v4</Text>
-                 <View style={styles.eventMetaRow}>
-                    <Icon name="near-me" size={12} color={colors.primary} />
-                    <Text style={styles.eventMeta}>0.1 mi</Text>
-                    <Icon name="timer" size={12} color={colors.accents.coral} style={{ marginLeft: 8 }} />
-                    <Text style={[styles.eventMeta, { color: colors.accents.coral }]}>20m left</Text>
-                 </View>
-                 <View style={styles.attendees}>
-                    <View style={styles.avatarStack}>
-                       <View style={styles.miniAvatar} />
-                       <View style={styles.miniAvatar} />
-                       <View style={styles.miniAvatar} />
-                    </View>
-                    <Text style={styles.attendeeText}>+5 joining</Text>
-                 </View>
-              </View>
-           </View>
-        </ClayView>
+              <Text style={styles.cardDesc}>
+                Spotted <Text style={styles.highlightText}>0.2mi</Text> away at the Plaza. Fresh produce and local crafts!
+              </Text>
+            </View>
+          </ClayView>
+        </Animated.View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Nearby</Text>
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <ClayView style={styles.notificationCard}>
+            <View style={styles.avatarWrapper}>
+              <Image
+                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA1HK78YuTWeofdEQYQO5GGyE5-v1ZsLp6QEAV3ToE6jDc3AhwGfpxK0grffG-smp6TXmMdkFNrktojJlYKKq0UHyrmJoyieLgKrQpsQ_CUsxbv49aRl9hfdIqxDNUeKyLF9VwVdU8XXifSWvEjm8-1l-t7HtBBPO6RFmA6Y8rS3tut66ye7O5fuxT01afvKnElq-s9wsFVdJXBll7FVn0Q9s4adW8vGaPN5XrbtbAw1VqUQpZeUcmkQXDqbNZ2_rgB36gWzXaDLTQ' }}
+                style={styles.avatar}
+              />
+              <View style={[styles.badge, { backgroundColor: '#22c55e' }]}>
+                <Icon name="add" size={10} color="white" />
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardTitle}>Ahmed joined</Text>
+                <Text style={styles.cardTime}>14m</Text>
+              </View>
+              <Text style={styles.cardDesc}>
+                He just RSVP'd to <Text style={styles.boldText}>"Sunset Yoga"</Text>
+              </Text>
+            </View>
+          </ClayView>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(300)}>
+          <ClayView style={styles.notificationCard}>
+            <View style={styles.newDot} />
+            <View style={[styles.iconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
+              <Icon name="forum" size={28} color="#a78bfa" />
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardTitle}>Downtown Runners</Text>
+                <Text style={styles.cardTime}>1h</Text>
+              </View>
+              <View style={styles.typingRow}>
+                <View style={styles.typingDots}>
+                   <View style={styles.typingDot} />
+                   <View style={styles.typingDot} />
+                   <View style={styles.typingDot} />
+                </View>
+                <Text style={styles.cardDesc}>3 new messages from the group</Text>
+              </View>
+            </View>
+          </ClayView>
+        </Animated.View>
+
+        <View style={[styles.dateHeader, { marginTop: 30 }]}>
+          <Text style={styles.dateLabel}>YESTERDAY</Text>
+          <View style={styles.dividerLine} />
         </View>
 
-        <NotificationItem
-          title="Artisan Coffee Tasting"
-          message="Starts in 1h • Join us for a unique experience."
-          time="0.3 mi away"
-          unread
-        />
-        <NotificationItem
-          title="Rooftop Open Mic Night"
-          message="Tonight 8 PM • Show your talent!"
-          time="0.5 mi away"
-        />
-        <NotificationItem
-          title="Board Game Marathon"
-          message="Tomorrow • All day long."
-          time="1.2 mi away"
-        />
+        <Animated.View entering={FadeInDown.delay(400)}>
+          <ClayView style={[styles.notificationCard, { opacity: 0.9 }]}>
+            <View style={styles.avatarWrapper}>
+              <Image
+                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAe_g9lGseEM3R3N-keeQZjARVQCe6B8VgW9j1l7_59cN55Jb_wBBQNpxwHPHVm1K36bbIbUo3kuxZ0kMKT5kb5HZdXfWXC7VEIA7BbYSCNsxZiBr2VDViBONBrbqdWFqXqMjHLApSDKSpQCtrctGlgW6OIE4l02HghZkLxUP9_fMy0l2zchBD8cAQtyD_oEvUzlqpt-NWWjgF5DtyksW8k_fVJtT3iWV-Wf4lDioa0f1UFnnn7ZcMYfgCgmJJJ-zPlGDDuegLvLyk' }}
+                style={styles.avatar}
+              />
+              <View style={[styles.badge, { backgroundColor: '#a78bfa' }]}>
+                <Text style={styles.badgeText}>@</Text>
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardTitle}>Sarah mentioned you</Text>
+                <Text style={styles.cardTime}>1d</Text>
+              </View>
+              <Text style={styles.cardDesc}>
+                in <Text style={styles.boldText}>"Community Garden"</Text> comments
+              </Text>
+            </View>
+          </ClayView>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(500)}>
+          <ClayView style={[styles.notificationCard, { opacity: 0.8 }]}>
+            <View style={[styles.iconContainer, { backgroundColor: '#f1f5f9' }]}>
+              <Icon name="cloud-off" size={28} color="#94a3b8" />
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.cardTop}>
+                <Text style={styles.cardTitle}>Storm warning issued</Text>
+                <Text style={styles.cardTime}>1d</Text>
+              </View>
+              <Text style={styles.cardDesc}>
+                Heavy rain expected in your area tomorrow. Outdoor events may be rescheduled.
+              </Text>
+            </View>
+          </ClayView>
+        </Animated.View>
+
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );
@@ -105,47 +162,53 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.light,
   },
+  statusBarSpacer: {
+    height: 50,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 25,
-    paddingTop: 60,
-    marginBottom: 20,
+    paddingBottom: 10,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.text.primary,
+    letterSpacing: -0.5,
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
+  settingsBtn: {
+    width: 44,
+    height: 44,
   },
-  locationText: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
-  toggleRow: {
-    paddingHorizontal: 25,
-    marginBottom: 20,
-  },
-  togglePill: {
-    flexDirection: 'row',
-    height: 50,
-    borderRadius: 25,
-    padding: 4,
-  },
-  toggleItem: {
-    flex: 1,
-    alignItems: 'center',
+  settingsBtnInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
-    borderRadius: 21,
+    alignItems: 'center',
   },
-  activeToggle: {
+  tabBarWrapper: {
+    paddingHorizontal: 25,
+    paddingVertical: 20,
+    backgroundColor: colors.background.light,
+    zIndex: 10,
+  },
+  tabBarPill: {
+    height: 56,
+    flexDirection: 'row',
+    borderRadius: 28,
+    padding: 6,
+    backgroundColor: 'rgba(241, 245, 249, 0.8)',
+  },
+  tab: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
+  },
+  activeTab: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
@@ -153,108 +216,145 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  toggleText: {
-    fontSize: 13,
+  tabText: {
+    fontSize: 14,
     fontWeight: '600',
     color: colors.text.secondary,
   },
-  activeToggleText: {
-    fontSize: 13,
-    fontWeight: '800',
+  activeTabText: {
     color: 'white',
+    fontWeight: '800',
   },
-  categoriesContainer: {
-    marginBottom: 20,
-  },
-  categoryList: {
-    paddingLeft: 25,
-    paddingRight: 15,
-  },
-  feed: {
+  scrollContent: {
     paddingHorizontal: 25,
-    paddingBottom: 120,
   },
-  sectionHeader: {
+  dateHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 16,
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: colors.text.primary,
-  },
-  seeAll: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  urgentCard: {
-    marginBottom: 24,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 138, 128, 0.3)',
-  },
-  cardContent: {
-    flexDirection: 'row',
-    padding: 20,
     alignItems: 'center',
+    gap: 15,
+    marginVertical: 15,
   },
-  emojiContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
+  dateLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94a3b8',
+    letterSpacing: 1,
   },
-  largeEmoji: {
-    fontSize: 32,
-  },
-  eventInfo: {
-    marginLeft: 16,
+  dividerLine: {
     flex: 1,
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 1,
   },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-    marginBottom: 4,
-  },
-  eventMetaRow: {
+  notificationCard: {
     flexDirection: 'row',
+    padding: 16,
+    borderRadius: 24,
+    marginBottom: 15,
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 15,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  eventMeta: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    fontWeight: 'bold',
-    marginLeft: 4,
+  cardIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
+    backgroundColor: colors.primary,
   },
-  attendees: {
-    flexDirection: 'row',
+  newDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.accents.sunYellow,
+    zIndex: 1,
+  },
+  iconContainer: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarStack: {
-    flexDirection: 'row',
-    marginRight: 8,
+  avatarWrapper: {
+    position: 'relative',
   },
-  miniAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ddd',
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     borderWidth: 2,
     borderColor: 'white',
-    marginLeft: -8,
   },
-  attendeeText: {
+  badge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.text.primary,
+  },
+  cardTime: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94a3b8',
+  },
+  cardDesc: {
+    fontSize: 13,
     color: colors.text.secondary,
+    lineHeight: 18,
+  },
+  highlightText: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  boldText: {
+    fontWeight: '700',
+    color: colors.text.slate,
+  },
+  typingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  typingDots: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  typingDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#a78bfa',
   },
 });
 

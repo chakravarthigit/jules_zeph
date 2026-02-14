@@ -7,27 +7,28 @@ import DiscoverScreen from '../screens/main/DiscoverScreen';
 import CreatePostScreen from '../screens/main/CreatePostScreen';
 import ActivityScreen from '../screens/main/ActivityScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
+import CalendarScreen from '../screens/main/CalendarScreen';
 import { colors } from '../theme';
 import { ClayView } from '../components/ClayView';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TabItem = ({ route, index, isFocused, navigation }: any) => {
   const scale = useSharedValue(1);
-  const width = useSharedValue(isFocused ? 60 : 40);
+  const tabWidth = useSharedValue(isFocused ? 60 : 40);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withSpring(scale.value) }],
-    width: withSpring(width.value),
+    width: withSpring(tabWidth.value),
   }));
 
   React.useEffect(() => {
-    width.value = isFocused ? 60 : 40;
-  }, [isFocused]);
+    tabWidth.value = isFocused ? 60 : 40;
+  }, [isFocused, tabWidth]);
 
   const onPress = () => {
     navigation.emit({
@@ -43,6 +44,7 @@ const TabItem = ({ route, index, isFocused, navigation }: any) => {
       case 'Home': return 'home';
       case 'Discover': return 'explore';
       case 'Activity': return 'notifications';
+      case 'Calendar': return 'calendar-today';
       case 'Profile': return 'person';
       default: return 'help';
     }
@@ -67,6 +69,40 @@ const TabItem = ({ route, index, isFocused, navigation }: any) => {
   );
 };
 
+const CreateTabItem = ({ route, navigation, isFocused }: any) => {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(scale.value) }]
+  }));
+
+  const onPress = () => {
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: route.key,
+      canPreventDefault: true,
+    });
+
+    if (!isFocused && !event.defaultPrevented) {
+      navigation.navigate(route.name);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      key={route.name}
+      activeOpacity={0.9}
+      onPress={onPress}
+      onPressIn={() => (scale.value = 1.1)}
+      onPressOut={() => (scale.value = 1)}
+      style={styles.fabContainer}
+    >
+      <Animated.View style={[styles.fab, animatedStyle]}>
+         <Icon name="add" size={32} color="white" />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <View style={styles.tabBarContainer}>
@@ -75,47 +111,13 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           const isFocused = state.index === index;
 
           if (route.name === 'Create') {
-            const scale = useSharedValue(1);
-            const animatedStyle = useAnimatedStyle(() => ({
-               transform: [{ scale: withSpring(scale.value) }]
-            }));
-
-            const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          const getIconName = (name: string) => {
-             switch(name) {
-               case 'Home': return 'home';
-               case 'Discover': return 'explore';
-               case 'Activity': return 'notifications';
-               case 'Profile': return 'person';
-               default: return 'help';
-             }
-          }
-
-          if (route.name === 'Create') {
             return (
-              <TouchableOpacity
+              <CreateTabItem
                 key={route.name}
-                activeOpacity={0.9}
-                onPress={onPress}
-                onPressIn={() => (scale.value = 1.1)}
-                onPressOut={() => (scale.value = 1)}
-                style={styles.fabContainer}
-              >
-                <Animated.View style={[styles.fab, animatedStyle]}>
-                   <Icon name="add" size={32} color="white" />
-                </Animated.View>
-              </TouchableOpacity>
+                route={route}
+                navigation={navigation}
+                isFocused={isFocused}
+              />
             );
           }
 
@@ -144,6 +146,7 @@ export const MainTabNavigator = () => {
       <Tab.Screen name="Discover" component={DiscoverScreen} />
       <Tab.Screen name="Create" component={CreatePostScreen} />
       <Tab.Screen name="Activity" component={ActivityScreen} />
+      <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

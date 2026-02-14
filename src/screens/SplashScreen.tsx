@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated as RNAnimated } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, typography } from '../theme';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -7,30 +7,35 @@ import Svg, { Circle, Path } from 'react-native-svg';
 const { width, height } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }: any) => {
-  const pulseAnim = React.useRef(new RNAnimated.Value(0.5)).current;
+  const pulseAnim = React.useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    RNAnimated.loop(
-      RNAnimated.sequence([
-        RNAnimated.timing(pulseAnim, {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 1500,
           useNativeDriver: true,
         }),
-        RNAnimated.timing(pulseAnim, {
+        Animated.timing(pulseAnim, {
           toValue: 0.5,
           duration: 1500,
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+
+    animation.start();
 
     const timer = setTimeout(() => {
       navigation.replace('Auth');
     }, 3000);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      animation.stop();
+    };
+  }, [navigation, pulseAnim]);
 
   return (
     <LinearGradient colors={['#FFFBF0', '#E6F0FF']} style={styles.container}>
@@ -63,7 +68,7 @@ const SplashScreen = ({ navigation }: any) => {
 
         <View style={styles.loadingContainer}>
           <View style={styles.loadingTrack}>
-             <RNAnimated.View style={[styles.loadingFill, { transform: [{ scaleX: pulseAnim }] }]} />
+             <Animated.View style={[styles.loadingFill, { transform: [{ scaleX: pulseAnim }] }]} />
           </View>
           <Text style={styles.loadingText}>LOADING YOUR LOCAL WORLD</Text>
         </View>

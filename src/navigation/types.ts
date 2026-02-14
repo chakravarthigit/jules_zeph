@@ -17,6 +17,7 @@ export type MainTabParamList = {
   Create: undefined;
   Activity: undefined;
   Profile: undefined;
+  Calendar: undefined;
 };
 
 export type RootStackParamList = {
@@ -34,4 +35,5 @@ export type RootStackParamList = {
   Settings: undefined;
   Privacy: undefined;
   Support: undefined;
+  NetworkError: undefined;
 };

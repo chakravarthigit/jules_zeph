@@ -1,128 +1,221 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Image, TouchableOpacity } from 'react-native';
-import { colors, typography } from '../../theme';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { colors } from '../../theme';
 import { ClayView } from '../../components/ClayView';
-import { ProfileAvatar } from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  useAnimatedGestureHandler,
-} from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import Animated, { FadeInRight, FadeInDown } from 'react-native-reanimated';
 
-const { width, height } = Dimensions.get('window');
+const CATEGORIES = [
+  { id: '1', label: 'All', icon: '🎈' },
+  { id: '2', label: 'Food', icon: '🍕' },
+  { id: '3', label: 'Active', icon: '🏃' },
+  { id: '4', label: 'Social', icon: '🥂' },
+  { id: '5', label: 'Art', icon: '🎨' },
+];
+
+const NEARBY_EVENTS = [
+  {
+    id: '1',
+    title: 'Artisan Coffee Tasting',
+    dist: '0.3 mi',
+    time: 'Starts in 1h',
+    cat: 'Food & Drink',
+    icon: '☕',
+    avatars: ['https://lh3.googleusercontent.com/aida-public/AB6AXuA44pkbHu0TuAF3hLDP2LbJ9RcVBVuOGoAWeu3hH_hcHrGYlSwVb4bjGzU8pX83ZGOpdRbSdkw2nG0oIAguFGSo2HOdgZtWs3i0I4whaa32Wb5VkeiZ7-CUTISUesKYkm-qwHLcJRy5L5A3ramyZrIveL8Ln1vHhi9H_qeSZIBzRSuJvoFygRKpZd0hXg6j4u_81Ou-CCOqOjtjFpm85kFubkRHjXCRINY919jj7vl_Uxi6Ad38ryHhq_NIMYQsIfR9jRGFhkDuyFg', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCROt7lyO-htu1eSYaQSamATQ2omFhzWLNV46kdMmJBo3_C2Q4oSXAMXYOQfYzUIZQmn-D4F0xLE3kUzgE3X227kBb3_pAaATWrpoZ72eFxK1Upx9-wIaIdokzmsNnbFl7yDoLIZcpOeZCKGjX86BwkOk_NHUxHIunIyAUYxlIWSVFb4GuYj-juLnF4VmF8cVEI3gbNSe5NFLfISzgbcb46gh2axgESalk2yHaoxCQ8ZXT3-DGa6t0qqcLgnjBAGhFx1g6LYp0SvFM']
+  },
+  {
+    id: '2',
+    title: 'Rooftop Open Mic Night',
+    dist: '0.5 mi',
+    time: 'Tonight 8 PM',
+    icon: '🎸',
+    progress: 0.75,
+    spots: '15 Spots Filled',
+    left: '5 Left'
+  },
+  {
+    id: '3',
+    title: 'Board Game Marathon',
+    dist: '1.2 mi',
+    time: 'Tomorrow',
+    icon: '🧩',
+    isInterested: true
+  }
+];
 
 const DiscoverScreen = () => {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const rotate = useSharedValue(0);
-
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = translateX.value;
-      ctx.startY = translateY.value;
-    },
-    onActive: (event, ctx) => {
-      translateX.value = ctx.startX + event.translationX;
-      translateY.value = ctx.startY + event.translationY;
-      rotate.value = translateX.value / 20;
-    },
-    onEnd: (event) => {
-      if (Math.abs(event.velocityX) > 500 || Math.abs(event.translationX) > width * 0.4) {
-        translateX.value = withSpring(event.translationX > 0 ? width * 1.5 : -width * 1.5);
-      } else {
-        translateX.value = withSpring(0);
-        translateY.value = withSpring(0);
-        rotate.value = withSpring(0);
-      }
-    },
-  });
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-        { rotate: `${rotate.value}deg` },
-      ],
-    };
-  });
+  const [activeView, setActiveView] = useState('Cards');
+  const [activeCat, setActiveCat] = useState('All');
 
   return (
     <View style={styles.container}>
+      <View style={styles.statusBarSpacer} />
+
       <View style={styles.header}>
-        <TouchableOpacity style={styles.navBtn}>
-          <Icon name="arrow-back" size={24} color={colors.text.secondary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Discover Nearby</Text>
-        <TouchableOpacity style={styles.navBtn}>
-          <Icon name="tune" size={24} color={colors.text.secondary} />
+        <View>
+          <Text style={styles.title}>What's Near You</Text>
+          <View style={styles.locationRow}>
+            <Icon name="location-on" size={14} color={colors.primary} />
+            <Text style={styles.locationText}>SoHo, New York</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.profileBtn}>
+          <ClayView style={styles.profileBtnInner}>
+            <Image
+              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAODJzF63HA_xbx15DyGnLNPB8HKrJeZeIXmUVu3cC6Di3vzQVNK1hwbc8HSJ5_N5pGMoxE3Wsz_g7D6PWfWKnp5ynpJz3xGDPRMaEV8qQMXTy-QfzBX2Ge8l2jC5H9AdkjSOOufIaf9EwdvKhh9sPcugznrFzPuku3ncD2SB8W2dtzfQd09N_Ga3u0bdSGdiASGDWB1Q0VmuimrSGoyXM6nHMWon0WTtUrM5w_jFakU0Ye4-Z5duGLYMxDzQ1uaZ8ff_YXmBx1HgM' }}
+              style={styles.avatar}
+            />
+          </ClayView>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.cardContainer}>
-        {/* Next Card Background */}
-        <View style={styles.nextCard} />
+      <View style={styles.viewToggleWrapper}>
+        <ClayView inset style={styles.togglePill}>
+          {['Map', 'Cards', 'List'].map(view => (
+            <TouchableOpacity
+              key={view}
+              onPress={() => setActiveView(view)}
+              style={[styles.toggleBtn, activeView === view && styles.activeToggle]}
+            >
+              <Text style={[styles.toggleText, activeView === view && styles.activeToggleText]}>{view}</Text>
+            </TouchableOpacity>
+          ))}
+        </ClayView>
+      </View>
 
-        {/* Active Card */}
-        <PanGestureHandler onGestureEvent={gestureHandler}>
-          <Animated.View style={[styles.cardWrapper, animatedStyle]}>
-            <ClayView style={styles.card}>
-              <View style={styles.imageSection}>
-                 <View style={styles.placeholderImage} />
-                 <View style={styles.urgencyBadge}>
-                    <Icon name="timer" size={14} color="#92400e" />
-                    <Text style={styles.urgencyText}>Starting in 20 min</Text>
-                 </View>
-              </View>
-              <View style={styles.contentSection}>
-                <Text style={styles.title}>Sunset Rooftop Yoga</Text>
-                <View style={styles.hostRow}>
-                  <ProfileAvatar size={32} />
-                  <View style={styles.hostText}>
-                    <Text style={styles.hostLabel}>HOST</Text>
-                    <Text style={styles.hostName}>Sarah Jenkins</Text>
-                  </View>
-                  <View style={styles.ratingBadge}>
-                    <Text style={styles.ratingText}>★ 4.9</Text>
-                  </View>
+      <View style={styles.categoriesWrapper}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
+          {CATEGORIES.map((cat, index) => {
+            const isActive = activeCat === cat.label;
+            return (
+              <Animated.View key={cat.id} entering={FadeInRight.delay(index * 100)}>
+                <TouchableOpacity
+                  onPress={() => setActiveCat(cat.label)}
+                  style={[styles.catChip, isActive && styles.activeCatChip]}
+                >
+                  <Text style={styles.catIcon}>{cat.icon}</Text>
+                  <Text style={[styles.catLabel, isActive && styles.activeCatLabel]}>{cat.label}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <View style={styles.liveDot} />
+            <Text style={styles.sectionTitle}>Happening Right Now</Text>
+          </View>
+          <TouchableOpacity><Text style={styles.seeAllText}>See All</Text></TouchableOpacity>
+        </View>
+
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <ClayView style={styles.urgentCard}>
+            <View style={styles.endingBadge}>
+               <Text style={styles.endingText}>ENDING SOON</Text>
+            </View>
+            <View style={styles.cardMain}>
+              <ClayView inset style={styles.urgentIconBox}>
+                <Text style={{ fontSize: 32 }}>🏐</Text>
+              </ClayView>
+              <View style={styles.urgentInfo}>
+                <Text style={styles.urgentTitle}>Beach Volleyball 4v4</Text>
+                <View style={styles.urgentMeta}>
+                   <View style={styles.metaItem}>
+                     <Icon name="near-me" size={12} color={colors.primary} />
+                     <Text style={styles.metaText}>0.1 mi</Text>
+                   </View>
+                   <View style={styles.metaItem}>
+                     <Icon name="timer" size={12} color={colors.accents.coralPunch} />
+                     <Text style={[styles.metaText, { color: colors.accents.coralPunch, fontWeight: '700' }]}>20m left</Text>
+                   </View>
                 </View>
-                <View style={styles.tagsRow}>
-                  <View style={styles.tag}>
-                    <Icon name="monetization-on" size={12} color={colors.primary} />
-                    <Text style={[styles.tagText, { color: colors.primary }]}>Free</Text>
+                <View style={styles.urgentFooter}>
+                  <View style={styles.avatarPile}>
+                     {[1,2,3].map(i => (
+                       <Image
+                         key={i}
+                         source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAPSz7HaMt3yCMRI_XaUv1sJRSHCxc3FykF7miSyLMlJkDGfb4pi6w_PUzGbnvX1k0dsnJTaDfcPLXoufyYRgFI9QRXcqaPlsI_-_MNebgpllpqALkQXgfxO9lHIoA1rK2UyKBpPWVjS8GVITkpTq-pCavg_UN5zdjtNHy8fvN3MPaLJzdFMNctxSE5sMgzz6HzH6SImt7X11OngBNTSMcStnpePGdbeaRJVdbnMvTkrOfOYCb3uajobyspLsCOtUQj90--gX7_MMo' }}
+                         style={[styles.pileAvatar, { marginLeft: i === 1 ? 0 : -8 }]}
+                       />
+                     ))}
+                     <View style={styles.pileCount}><Text style={styles.pileCountText}>+5</Text></View>
                   </View>
-                  <View style={styles.tag}>
-                    <Icon name="directions-walk" size={12} color={colors.text.secondary} />
-                    <Text style={styles.tagText}>8 min walk</Text>
-                  </View>
-                  <View style={styles.tag}>
-                    <Icon name="group" size={12} color={colors.text.secondary} />
-                    <Text style={styles.tagText}>12/20</Text>
-                  </View>
+                  <TouchableOpacity style={styles.arrowBtn}>
+                     <Icon name="chevron-right" size={20} color={colors.primary} />
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.description} numberOfLines={2}>
-                  Unwind with a flow session overlooking the city skyline. Mats provided, bring water!
-                </Text>
               </View>
-            </ClayView>
-          </Animated.View>
-        </PanGestureHandler>
-      </View>
+            </View>
+          </ClayView>
+        </Animated.View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]}>
-           <Icon name="close" size={40} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.infoBtn]}>
-           <Icon name="info" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.acceptBtn]}>
-           <Icon name="check" size={40} color="white" />
-        </TouchableOpacity>
-      </View>
+        <Text style={[styles.sectionTitle, { marginTop: 30, marginBottom: 20 }]}>Nearby</Text>
+
+        <View style={styles.nearbyList}>
+          {NEARBY_EVENTS.map((event, index) => (
+            <Animated.View key={event.id} entering={FadeInDown.delay(300 + index * 100)}>
+              <ClayView style={styles.nearbyCard}>
+                <ClayView inset style={styles.nearbyIconBox}>
+                  <Text style={{ fontSize: 28 }}>{event.icon}</Text>
+                </ClayView>
+                <View style={styles.nearbyInfo}>
+                  <Text style={styles.nearbyTitle}>{event.title}</Text>
+                  <View style={styles.urgentMeta}>
+                    <View style={styles.metaItem}>
+                      <Icon name="near-me" size={12} color={colors.primary} />
+                      <Text style={styles.metaText}>{event.dist}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Icon name={event.time.includes('Tomorrow') ? "event" : "schedule"} size={12} color="#94a3b8" />
+                      <Text style={styles.metaText}>{event.time}</Text>
+                    </View>
+                  </View>
+
+                  {event.progress !== undefined && (
+                    <View style={styles.progressSection}>
+                      <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { width: `${event.progress * 100}%` }]} />
+                      </View>
+                      <View style={styles.spotsRow}>
+                        <Text style={styles.spotsText}>{event.spots}</Text>
+                        <Text style={[styles.spotsText, { color: colors.primary }]}>{event.left}</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {event.cat && (
+                    <View style={styles.catFooter}>
+                      <View style={styles.catBadge}>
+                        <Text style={styles.catBadgeText}>{event.cat}</Text>
+                      </View>
+                      <View style={styles.avatarPile}>
+                         {event.avatars?.map((a, i) => (
+                           <Image key={i} source={{ uri: a }} style={[styles.pileAvatar, { width: 24, height: 24, borderRadius: 12, marginLeft: i === 0 ? 0 : -6 }]} />
+                         ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {event.isInterested && (
+                    <TouchableOpacity style={styles.interestBtn}>
+                      <Text style={styles.interestBtnText}>Interested?</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </ClayView>
+            </Animated.View>
+          ))}
+        </View>
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+
+      <TouchableOpacity style={styles.fab}>
+        <Icon name="add" size={32} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -130,191 +223,347 @@ const DiscoverScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eef0f4',
+    backgroundColor: colors.background.light,
+  },
+  statusBarSpacer: {
+    height: 50,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    alignItems: 'center',
+    paddingHorizontal: 25,
+    paddingBottom: 10,
   },
-  navBtn: {
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: colors.text.primary,
+    letterSpacing: -0.5,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  locationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  profileBtn: {
+    width: 48,
+    height: 48,
+  },
+  profileBtnInner: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'white',
-    alignItems: 'center',
+    padding: 3,
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 22,
+  },
+  viewToggleWrapper: {
+    paddingHorizontal: 25,
+    marginTop: 20,
+  },
+  togglePill: {
+    height: 52,
+    flexDirection: 'row',
+    borderRadius: 26,
+    padding: 5,
+  },
+  toggleBtn: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
+  },
+  activeToggle: {
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  activeToggleText: {
+    color: 'white',
+    fontWeight: '800',
+  },
+  categoriesWrapper: {
+    marginTop: 25,
+  },
+  categoriesScroll: {
+    paddingLeft: 25,
+    paddingRight: 25,
+    gap: 12,
+    paddingBottom: 5,
+  },
+  catChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 30,
+    backgroundColor: 'white',
+    gap: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
-  navIcon: {
-    fontSize: 20,
-    color: colors.text.secondary,
+  activeCatChip: {
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.2,
+    elevation: 4,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: colors.text.primary,
+  catIcon: {
+    fontSize: 18,
   },
-  cardContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+  catLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text.slate,
   },
-  nextCard: {
-    position: 'absolute',
-    width: width * 0.85,
-    height: height * 0.6,
-    backgroundColor: 'white',
-    borderRadius: 40,
-    opacity: 0.4,
-    transform: [{ scale: 0.9 }, { translateY: 20 }],
+  activeCatLabel: {
+    color: 'white',
   },
-  cardWrapper: {
-    width: '100%',
-    height: height * 0.65,
+  scrollContent: {
+    paddingHorizontal: 25,
+    paddingTop: 20,
   },
-  card: {
-    flex: 1,
-    borderRadius: 40,
-    overflow: 'hidden',
-    backgroundColor: 'white',
-  },
-  imageSection: {
-    height: '55%',
-    backgroundColor: '#ddd',
-  },
-  placeholderImage: {
-    flex: 1,
-  },
-  urgencyBadge: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: colors.accents.yellow,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    transform: [{ rotate: '-2deg' }],
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  urgencyText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#92400e',
-    marginLeft: 6,
-  },
-  contentSection: {
-    flex: 1,
-    padding: 24,
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 28,
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.accents.coralPunch,
+  },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '900',
     color: colors.text.primary,
-    lineHeight: 32,
   },
-  hostRow: {
+  seeAllText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  urgentCard: {
+    borderRadius: 32,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 138, 128, 0.3)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  endingBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 138, 128, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderBottomLeftRadius: 16,
+  },
+  endingText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: colors.accents.coralPunch,
+  },
+  cardMain: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
+    gap: 15,
   },
-  hostText: {
-    marginLeft: 10,
+  urgentIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  urgentInfo: {
     flex: 1,
   },
-  hostLabel: {
-    fontSize: 8,
-    fontWeight: 'bold',
+  urgentTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text.primary,
+    marginBottom: 6,
+  },
+  urgentMeta: {
+    flexDirection: 'row',
+    gap: 15,
+    marginBottom: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 11,
+    fontWeight: '600',
     color: colors.text.secondary,
   },
-  hostName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-  },
-  ratingBadge: {
-    backgroundColor: 'white',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  ratingText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-  },
-  tagsRow: {
+  urgentFooter: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 15,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  tag: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+  avatarPile: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  tagText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: colors.text.secondary,
-    marginLeft: 4,
+  pileAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'white',
   },
-  description: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    lineHeight: 20,
-    marginTop: 10,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  pileCount: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: 'white',
+    marginLeft: -8,
     justifyContent: 'center',
-    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  pileCountText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'white',
+  },
+  arrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(74, 124, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nearbyList: {
     gap: 20,
   },
-  actionBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 5,
-  },
-  rejectBtn: {
-    backgroundColor: colors.accents.coral,
-  },
-  infoBtn: {
-    backgroundColor: 'white',
-    width: 56,
-    height: 56,
+  nearbyCard: {
+    flexDirection: 'row',
+    padding: 20,
     borderRadius: 28,
+    gap: 15,
   },
-  acceptBtn: {
+  nearbyIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nearbyInfo: {
+    flex: 1,
+  },
+  nearbyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text.primary,
+    marginBottom: 6,
+  },
+  progressSection: {
+    marginTop: 5,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
     backgroundColor: colors.primary,
+    borderRadius: 3,
   },
-  actionIcon: {
-    fontSize: 32,
-    color: 'white',
-    fontWeight: 'bold',
+  spotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  spotsText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94a3b8',
+  },
+  catFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  catBadge: {
+    backgroundColor: 'rgba(74, 124, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  catBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  interestBtn: {
+    marginTop: 10,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 124, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  interestBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 110,
+    right: 25,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
 });
 
