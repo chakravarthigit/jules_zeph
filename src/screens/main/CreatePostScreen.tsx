@@ -51,7 +51,7 @@ const CreatePostScreen = ({ navigation }: any) => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.cardWrapper}>
-              <ClayView style={[styles.optionCard, { backgroundColor: colors.accents.yellow }]}>
+              <ClayView style={[styles.optionCard, { backgroundColor: colors.accents.sunYellow }]}>
                 <Text style={styles.cardEmoji}>📣</Text>
                 <Text style={[styles.cardTitle, { color: '#92400e' }]}>Share a{'\n'}Moment</Text>
               </ClayView>

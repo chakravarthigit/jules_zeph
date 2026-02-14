@@ -1,8 +1,8 @@
-import { TransitionPresets } from '@react-navigation/stack';
+// import { TransitionPresets } from '@react-navigation/stack';
 
 export const fadeTransition = {
   gestureEnabled: true,
-  ...TransitionPresets.FadeFromBottomAndroid,
+  // ...TransitionPresets.FadeFromBottomAndroid,
 };
 
 export const springTransition = {

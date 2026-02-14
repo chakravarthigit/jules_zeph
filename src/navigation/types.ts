@@ -36,4 +36,10 @@ export type RootStackParamList = {
   Privacy: undefined;
   Support: undefined;
   NetworkError: undefined;
+  DiscoveryArea: undefined;
+  UserActivityInsights: undefined;
+  MyInterest: undefined;
+  SwipeDiscoveryMode: undefined;
+  EmptyFeed: undefined;
+  NearbyActivityFeed: undefined;
 };
