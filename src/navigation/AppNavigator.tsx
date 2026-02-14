@@ -17,6 +17,7 @@ import WalletScreen from '../screens/profile/WalletScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import PrivacyScreen from '../screens/profile/PrivacyScreen';
 import SupportScreen from '../screens/profile/SupportScreen';
+import NetworkErrorScreen from '../screens/main/NetworkErrorScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -40,6 +41,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Privacy" component={PrivacyScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="NetworkError" component={NetworkErrorScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

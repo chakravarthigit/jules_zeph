@@ -1,92 +1,152 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
-import { colors, typography } from '../../theme';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { colors } from '../../theme';
 import { ClayView } from '../../components/ClayView';
-import { ProfileAvatar } from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, { FadeInUp, FadeInDown, FadeIn } from 'react-native-reanimated';
+
+const MESSAGES = [
+  {
+    id: '1',
+    user: 'Sarah',
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAewfCYYvCPTdcntOPuGdYGAzEzEHcTq6EOVlIVXPI6tAwEGgdnZwl-a0aBdVZGWdmXWijifbhHRXrZnPRF7n631Uhbyjfmis3XONN9vp4ZigqqblZ3l7m5_GoFYCK1AnpmE5b5TQCg4uloDSaLA0AfIJbGVaj-MtWbpVGvIGS19Z2bWKgOTuJ0k5wDZhnk47xocUO2taRtYn59ExUwzR8pXzBuovNvrcEaEPpj-LdfgDytfM_jihhwezrLlPBWSVxyxo8NWNA0lHM',
+    text: 'Is anyone bringing an extra mat? Mine ripped 😅',
+    time: '10:02 AM',
+    isMe: false
+  },
+  {
+    id: '2',
+    user: 'Mike',
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHjnxWyA4tL1gc1rInjg6jENuTO2mREp_zAZi7BRxCvWd5_OcIyAmShBUmYRO9iciZjGDth8eio7k-iPsZM6gSFkNYGDXSqfZuJIFTi36FykWDCMfeQ9HuWXbo18wSo7w5IKRBxgHjvRiwxHmEzbGVDFIxSOS0-gdYo6D-VnN2J2CaQTp0o94BsFthU12tUqoaxe6rYKHsWMKv5r9Ziw6oV-MU-nTt3RbsJyK0mLN9BBRW0e6JRFQxk0nNmZKmYLRBgq76ZynMnIc',
+    text: "I'll have one! I'll be there in 5 mins.",
+    time: '10:03 AM',
+    isMe: false,
+    reactions: [{ emoji: '❤️', count: 2 }]
+  },
+  {
+    id: '3',
+    text: "Great, see you both there! I'm grabbing coffee on the way. Anyone want one? ☕️",
+    time: '10:04 AM',
+    isMe: true
+  },
+  {
+    id: '4',
+    user: 'Jessica',
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAfRw16r-PbW5J87tAl_lQJaKdunqfCFIPYpxZ4iTI7AdzmcXMcgxjVEX7WuFjr9uXBpMGuFEG47dM25L59W3DZI9B663ANt6StvMKV31M8RGgtlUcV3CN_HXuAo_pS_IBwoICAvMLT2T9hyJrctFqVKXoNDFXcl68nIySXMWAUPYmOeS2Z6vUGIFND3kBa3QQqmGhbM9rT4JQZGSXeukX_mbd2sXZC-a9u6kKigbeXlVENAECjPAaJJizcV8T6vQejVAeOvFMVcBU',
+    text: 'Ooh yes please! Iced latte w/ oat milk? 🙏',
+    time: '10:05 AM',
+    isMe: false
+  }
+];
 
 const ChatScreen = ({ navigation }: any) => {
+  const [text, setText] = useState('');
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.blob1} />
+      <View style={styles.blob2} />
+
       <View style={styles.header}>
         <ClayView style={styles.headerCard}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-back-ios" size={20} color={colors.text.secondary} />
-          </TouchableOpacity>
-          <View style={styles.eventInfo}>
-             <ProfileAvatar size={40} />
-             <View style={styles.headerTitleContainer}>
-                <Text style={styles.headerTitle}>Sunset Yoga</Text>
-                <Text style={styles.chatStatus}>12 people chatting</Text>
-             </View>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Icon name="arrow-back-ios" size={20} color={colors.text.secondary} />
+            </TouchableOpacity>
+            <View style={styles.eventInfo}>
+              <View style={styles.avatarWrapper}>
+                <Image
+                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuACjo6dQ7LJTAZGE_2ilD8GhtFiOgNEAwr4T3tkz9NCs66X3qrEfW0RAItCauQIMmHz9ErVuReuUNPT5qizjSQ6yTx4qkcPVOPAZGJaX4bSGy61CT7Uv6K8DjwS06ocqDUPDSPjY67glEFPLyCKrC5u2I4yqkaTRhHyIthgSz6Qj95FBS_4pYE3u9yrw8CokFnis0h3RzRm8B1boXBesxv4jJznbOjPy9L-Nsc30QWloaDzoBCvalnHF9yln4S17MT40yD1s3nSRt0' }}
+                  style={styles.eventThumb}
+                />
+                <View style={styles.onlineIndicator} />
+              </View>
+              <View>
+                <Text style={styles.eventName}>Sunset Yoga</Text>
+                <Text style={styles.chatStats}>12 people chatting</Text>
+              </View>
+            </View>
           </View>
-          <TouchableOpacity>
-             <Icon name="more-vert" size={24} color={colors.text.secondary} />
+          <TouchableOpacity style={styles.moreButton}>
+            <Icon name="more-vert" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
         </ClayView>
       </View>
 
-      <ScrollView contentContainerStyle={styles.chatArea} showsVerticalScrollIndicator={false}>
-         <View style={styles.dateDivider}>
-            <ClayView style={styles.dateBadge} inset>
-               <Text style={styles.dateText}>TODAY</Text>
-            </ClayView>
-         </View>
+      <ScrollView
+        contentContainerStyle={styles.chatArea}
+        showsVerticalScrollIndicator={false}
+        ref={(ref) => ref?.scrollToEnd({ animated: true })}
+      >
+        <View style={styles.dateDivider}>
+          <View style={styles.dividerPill}>
+            <Text style={styles.dateText}>TODAY</Text>
+          </View>
+        </View>
 
-         {/* Incoming Message */}
-         <View style={styles.msgInRow}>
-            <ProfileAvatar size={32} />
-            <View style={styles.msgInCol}>
-               <Text style={styles.msgMeta}>Sarah • 10:02 AM</Text>
-               <ClayView style={styles.msgInBubble}>
-                  <Text style={styles.msgInText}>Is anyone bringing an extra mat? Mine ripped 😅</Text>
-               </ClayView>
-            </View>
-         </View>
+        {MESSAGES.map((msg, index) => (
+          <Animated.View
+            key={msg.id}
+            entering={msg.isMe ? FadeInUp.delay(index * 100) : FadeInDown.delay(index * 100)}
+            style={[styles.messageGroup, msg.isMe && styles.myMessageGroup]}
+          >
+            {!msg.isMe && (
+              <Image source={{ uri: msg.avatar }} style={styles.userAvatar} />
+            )}
+            <View style={[styles.bubbleWrapper, msg.isMe && styles.myBubbleWrapper]}>
+              {!msg.isMe && <Text style={styles.messageMeta}>{msg.user} • {msg.time}</Text>}
+              {msg.isMe && <Text style={styles.messageMeta}>{msg.time}</Text>}
 
-         {/* Outgoing Message */}
-         <View style={styles.msgOutRow}>
-            <View style={styles.msgOutCol}>
-               <Text style={styles.msgMetaOut}>10:04 AM</Text>
-               <ClayView style={styles.msgOutBubble}>
-                  <Text style={styles.msgOutText}>Great, see you both there! I'm grabbing coffee on the way. Anyone want one? ☕️</Text>
-               </ClayView>
-            </View>
-         </View>
-
-         {/* Incoming Message with Reaction */}
-         <View style={styles.msgInRow}>
-            <ProfileAvatar size={32} />
-            <View style={styles.msgInCol}>
-               <Text style={styles.msgMeta}>Mike • 10:03 AM</Text>
-               <ClayView style={styles.msgInBubble}>
-                  <Text style={styles.msgInText}>I have one! I'll be there in 5 mins.</Text>
+              <ClayView
+                style={[styles.bubble, msg.isMe ? styles.myBubble : styles.otherBubble]}
+                color={msg.isMe ? colors.primary : undefined}
+                inset={!msg.isMe}
+              >
+                <Text style={[styles.messageText, msg.isMe && styles.myMessageText]}>
+                  {msg.text}
+                </Text>
+                {msg.reactions && (
                   <View style={styles.reactionPill}>
-                     <Text style={styles.reactionText}>❤️ 2</Text>
+                    <Text style={styles.reactionEmoji}>{msg.reactions[0].emoji}</Text>
+                    <Text style={styles.reactionCount}>{msg.reactions[0].count}</Text>
                   </View>
-               </ClayView>
+                )}
+              </ClayView>
             </View>
-         </View>
+          </Animated.View>
+        ))}
       </ScrollView>
 
-      <View style={styles.inputArea}>
-         <View style={styles.inputRow}>
-            <TouchableOpacity style={styles.emojiBtn}>
-               <Icon name="sentiment-satisfied" size={24} color={colors.text.secondary} />
-            </TouchableOpacity>
-            <View style={styles.textInputWrapper}>
-               <TextInput
-                  style={styles.textInput}
-                  placeholder="Say something..."
-                  placeholderTextColor={colors.clay.gray}
-               />
+      <View style={styles.composeBar}>
+        <View style={styles.composeInner}>
+          <TouchableOpacity style={styles.emojiButton}>
+            <ClayView style={styles.emojiBtnInner} color="white">
+              <Icon name="emoji-emotions" size={24} color={colors.text.secondary} />
+            </ClayView>
+          </TouchableOpacity>
+
+          <ClayView inset style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Say something..."
+              placeholderTextColor="#94a3b8"
+              value={text}
+              onChangeText={setText}
+            />
+          </ClayView>
+
+          <TouchableOpacity style={styles.sendButton}>
+            <View style={styles.sendBtnInner}>
+              <Icon name="send" size={24} color="white" />
             </View>
-            <TouchableOpacity style={styles.sendBtn}>
-               <Icon name="send" size={20} color="white" />
-            </TouchableOpacity>
-         </View>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.safeAreaBar} />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -95,10 +155,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.light,
   },
+  blob1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: 'rgba(74, 124, 255, 0.1)',
+  },
+  blob2: {
+    position: 'absolute',
+    bottom: 100,
+    left: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 10,
+    paddingBottom: 15,
+    zIndex: 10,
   },
   headerCard: {
     flexDirection: 'row',
@@ -106,187 +185,223 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 12,
     borderRadius: 50,
-    backgroundColor: 'white',
   },
-  backBtn: {
-    fontSize: 32,
-    color: colors.text.secondary,
-    paddingHorizontal: 10,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   eventInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  headerTitleContainer: {
-    marginLeft: 12,
+  avatarWrapper: {
+    position: 'relative',
   },
-  headerTitle: {
+  eventThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.status.success,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  eventName: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: colors.text.primary,
   },
-  chatStatus: {
+  chatStats: {
     fontSize: 10,
-    color: colors.primary,
     fontWeight: '600',
+    color: colors.primary,
   },
-  moreBtn: {
-    fontSize: 24,
-    color: colors.text.secondary,
-    paddingHorizontal: 10,
+  moreButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chatArea: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100,
+    paddingTop: 10,
+    paddingBottom: 120,
   },
   dateDivider: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginVertical: 20,
   },
-  dateBadge: {
+  dividerPill: {
+    backgroundColor: 'rgba(226, 232, 240, 0.5)',
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 15,
   },
   dateText: {
     fontSize: 10,
-    fontWeight: 'bold',
-    color: colors.clay.gray,
+    fontWeight: '800',
+    color: '#94a3b8',
     letterSpacing: 1,
   },
-  msgInRow: {
+  messageGroup: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    marginBottom: 24,
+    gap: 10,
+    marginBottom: 20,
+    maxWidth: '85%',
   },
-  msgInCol: {
+  myMessageGroup: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row-reverse',
+  },
+  userAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  bubbleWrapper: {
+    gap: 4,
+  },
+  myBubbleWrapper: {
+    alignItems: 'flex-end',
+  },
+  messageMeta: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#94a3b8',
     marginLeft: 10,
-    maxWidth: '75%',
   },
-  msgMeta: {
-    fontSize: 10,
-    color: colors.text.secondary,
-    marginBottom: 4,
-    marginLeft: 8,
-  },
-  msgInBubble: {
+  bubble: {
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 24,
+    minWidth: 60,
+  },
+  otherBubble: {
     borderBottomLeftRadius: 4,
-    backgroundColor: 'white',
   },
-  msgInText: {
-    fontSize: 14,
-    color: colors.text.primary,
-    lineHeight: 20,
-  },
-  msgOutRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: 24,
-  },
-  msgOutCol: {
-    maxWidth: '80%',
-    alignItems: 'flex-end',
-  },
-  msgMetaOut: {
-    fontSize: 10,
-    color: colors.text.secondary,
-    marginBottom: 4,
-    marginRight: 8,
-  },
-  msgOutBubble: {
-    padding: 16,
-    borderRadius: 20,
+  myBubble: {
     borderBottomRightRadius: 4,
-    backgroundColor: colors.primary,
   },
-  msgOutText: {
+  messageText: {
     fontSize: 14,
-    color: 'white',
+    color: colors.text.slate,
     lineHeight: 20,
+  },
+  myMessageText: {
+    color: 'white',
+    fontWeight: '500',
   },
   reactionPill: {
     position: 'absolute',
-    bottom: -10,
-    right: 10,
+    bottom: -12,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: 'white',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
-  reactionText: {
+  reactionEmoji: {
+    fontSize: 12,
+  },
+  reactionCount: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: colors.text.secondary,
   },
-  inputArea: {
+  composeBar: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
-    padding: 20,
+    left: 0,
+    right: 0,
     backgroundColor: 'rgba(245, 246, 248, 0.8)',
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 10,
   },
-  inputRow: {
+  composeInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  emojiBtn: {
+  emojiButton: {
+    width: 44,
+    height: 44,
+  },
+  emojiBtnInner: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'white',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  textInputWrapper: {
+  inputContainer: {
     flex: 1,
-    height: 44,
-    backgroundColor: 'white',
-    borderRadius: 22,
-    marginHorizontal: 12,
-    paddingHorizontal: 16,
+    height: 48,
+    borderRadius: 24,
+    paddingHorizontal: 20,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
   },
-  textInput: {
+  input: {
     fontSize: 14,
     color: colors.text.primary,
+    fontWeight: '500',
   },
-  sendBtn: {
+  sendButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: colors.primary,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  sendIcon: {
-    color: 'white',
-    fontSize: 20,
-    marginLeft: 4,
+  sendBtnInner: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 4,
+  },
+  safeAreaBar: {
+    width: 100,
+    height: 5,
+    backgroundColor: '#cbd5e1',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: 15,
+    marginBottom: 5,
   },
 });
 
